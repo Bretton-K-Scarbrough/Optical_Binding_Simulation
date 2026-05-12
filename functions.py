@@ -18,7 +18,6 @@ from constants import (
     use_circular_polarization,
     alpha_real,
     num_of_particle,
-    use_gaussian_beam,
     pol_angle,
     q0,
     mu_0,
@@ -286,31 +285,7 @@ gen_Einc_mi_gaussian = (
     else gen_Einc_mi_gaussian_linear_polarization
 )
 
-
-def gen_Einc_mi_uniform(pos_arr: NDArray[float64]) -> NDArray[complex128]:
-    """
-    Generates the incident electric field. Assumes x-polarized Gaussian beam.
-
-    Parameters
-    ----------
-    pos_arr: cp.ndarray
-        Array of particle positons
-
-    Returns
-    cp.ndarray
-        Einc_mi with a shape of (N, 3), where N is the number of particles
-    """
-
-    N = pos_arr.shape[0]
-
-    Einc_mi = cp.zeros((N, 3), dtype=complex128)
-    Einc_mi[:, 0] = E0 * cp.cos(pol_angle)
-    Einc_mi[:, 1] = E0 * cp.sin(pol_angle)
-
-    return Einc_mi  # (N, 3)
-
-
-gen_Einc_mi = gen_Einc_mi_gaussian if use_gaussian_beam else gen_Einc_mi_uniform
+gen_Einc_mi = gen_Einc_mi_gaussian
 
 
 def gen_Hinc(pos_arr: NDArray[float64]) -> NDArray[complex128]:
@@ -546,62 +521,12 @@ def gen_dx_Einc_gaussian_circular_polarization(
     return dx_Einc
 
 
-def gen_dx_Einc_uniform(pos_arr: NDArray[float64]) -> NDArray[complex128]:
-    """
-    Compute the spatial derivative (Jacobian) of a uniform incident electric field.
-
-    For a spatially uniform incident beam/field, the electric field does not vary
-    with position:
-        E_inc(r) = constant
-    Therefore all spatial derivatives vanish:
-        ∂E_inc,i / ∂x_l = 0  for all i,l.
-
-    This function returns a zero tensor with the same “field-gradient” layout used
-    elsewhere in the simulation:
-        dx_Einc[n, i, l] = ∂E_inc,i(r_n) / ∂x_l.
-
-    Parameters
-    ----------
-    pos_arr : NDArray[np.float64]
-        Particle positions with shape (N, 3). Included for API consistency with
-        other incident-field generators; the result is independent of position for
-        a uniform field.
-
-    Returns
-    -------
-    dx_Einc : NDArray[np.complex128]
-        Zero array of shape (N, 3, 3) where
-        ``dx_Einc[n, i, l] = ∂E_inc,i(r_n) / ∂x_l = 0`` for all particles n and
-        components i,l.
-
-    Notes
-    -----
-    - The output dtype is complex to match the rest of the frequency-domain /
-      phasor-field pipeline.
-    - If you later switch to a plane wave with spatial phase (e.g., exp(i k·r))
-      or a Gaussian beam, this derivative will generally be nonzero.
-    """
-    N = num_of_particle
-
-    dx_Einc = cp.zeros((N, 3, 3), dtype=complex128)
-
-    for n in range(N):
-        matrix_term = cp.zeros((3, 3), dtype=complex128)
-        matrix_term[0, 0] = 0
-        matrix_term[0, 1] = 0
-        matrix_term[0, 2] = 0
-
-        dx_Einc[n] = matrix_term
-
-    return dx_Einc
-
-
 gen_dx_Einc_gaussian = (
     gen_dx_Einc_gaussian_circular_polarization
     if use_circular_polarization
     else gen_dx_Einc_gaussian_linear_polarization
 )
-gen_dx_Einc = gen_dx_Einc_gaussian if use_gaussian_beam else gen_dx_Einc_uniform
+gen_dx_Einc = gen_dx_Einc_gaussian
 
 
 def gen_F_grad(

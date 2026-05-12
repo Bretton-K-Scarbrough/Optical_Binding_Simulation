@@ -1,7 +1,6 @@
 import numpy as np
 
-use_gaussian_beam = True
-use_circular_polarization = True
+use_circular_polarization = False
 pol_angle = 45
 
 # Units
@@ -36,7 +35,6 @@ a = 75e-9 * meter
 vol = pi * a**3 * (4 / 3)
 rhoSIO2 = 2320 * kg / (meter**3)
 mass = vol * rhoSIO2
-# mass = 1
 mu = 1.6e-3 * kg / (meter * second)
 gamma = 6.0 * pi * mu * a / mass
 T = 300 * kelvin
@@ -44,8 +42,7 @@ T = 300 * kelvin
 # Laser Properties
 lam = 600e-9 * meter
 area = 100 * (1e-6 * meter) ** 2
-# power = 20 * watt
-power = 20 * watt
+power = 20 * watt  # Ludicrously high, lower for future simulations
 I_0 = (
     power / area * 0.1
 )  # I_0 = power / area  # Salandrino's original value, physically absurd
@@ -77,84 +74,32 @@ alpha_imag = alpha_s.imag
 sigma = k0 * alpha_imag / epsilon_0 * np.sqrt(epsilon_0 * mu_0)
 
 # Physical Setup
-L = 10 * lam
+L = 10 * lam  # Window size
 
-r = lam / 2
-
-# num_of_sides = 20
-# init_pos_arr = np.zeros((num_of_sides, 3))
-#
-# for i in range(num_of_sides):
-#     init_pos_arr[i, 0] = 4 * r * np.cos(2 * np.pi * (i / num_of_sides))
-#     init_pos_arr[i, 1] = 4 * r * np.sin(2 * np.pi * (i / num_of_sides))
-
-
-# temp = np.linspace(-3 * r, 3 * r, 3)
-# X, Y = np.meshgrid(temp, temp)
-#
-# init_pos_arr = np.column_stack([X.flatten(), Y.flatten(), np.zeros(X.size)])
+r = lam / 2  # Particle distance arbitrarily chosen
 
 init_pos_arr = np.asarray(
     [
-        # [0, r, 0],
-        # [r, 0, 0],
-        # [-r, 0, 0],
-        # [0, -r, 0],
-        # [0, 0, 0],
-        # [r, 0, 0],
-        # [-r, 0, 0],
-        # [2 * r, 0, 0],
-        # [-2 * r, 0, 0],
-        # [3 * r, 0, 0],
-        # [-3 * r, 0, 0],
-        [4 * r, 4 * r, 0],
-        # [-4 * r, 0, 0],
-        # [r, r, 0],
-        # [-r, r, 0],
-        # [-r, -r, 0],
-        # [r, -r, 0],
-        # [4 * r, 4 * r, 0],
-        # [-4 * r, 4 * r, 0],
-        # [-4 * r, -4 * r, 0],
-        # [4 * r, -4 * r, 0],
-        # [2 * r, 0, 0],
-        # [-2 * r, 0, 0],
-        # [-6 * r, 0, 0],
-        # [8 * r, 0, 0],
-        # [0, 10 * r, 0],
-        # [0, -10 * r, 0],
-        # [0, -r, 0],
-        # [8 * r, 8 * r, 0],
-        # [-8 * r, 8 * r, 0],
-        # [-8 * r, -8 * r, 0],
-        # [8 * r, -8 * r, 0],
+        [0, r, 0],
+        [r, 0, 0],
+        [-r, 0, 0],
+        [0, -r, 0],
     ]
 )
 
-np.random.seed(2002)
 # init_pos_arr = np.load(
 #     "./data/Data for Thesis/Fixed Placements/plus and big square/position_data_1.npy"
-# )[-1]
+# )[-1] # Grabs the final position from a saved data set.
 
-init_pos_arr = np.random.uniform(low=-L / 2, high=L / 2, size=(10, 3))
+np.random.seed(2002)
 # additional_pos_arr = np.random.uniform(low=-L / 2, high=L / 2, size=(20, 3))
-# additional_pos_arr = np.asarray(
-#     [
-#         [-8 * r, 6 * r, 0],
-#         [-8 * r, 5 * r, 0],
-#         [-8 * r, 4 * r, 0],
-#         [-8 * r, 3 * r, 0],
-#         [-8 * r, 2 * r, 0],
-#         [-8 * r, r, 0],
-#         [8 * r, 6 * r, 0],
-#         [8 * r, 5 * r, 0],
-#         [8 * r, 4 * r, 0],
-#         [8 * r, 3 * r, 0],
-#         [8 * r, 2 * r, 0],
-#         [8 * r, r, 0],
-#     ]
-# )
-# init_pos_arr = np.vstack((init_pos_arr, additional_pos_arr))
+additional_pos_arr = np.asarray(
+    [
+        [-8 * r, 6 * r, 0],
+        [-8 * r, 5 * r, 0],
+    ]
+)
+init_pos_arr = np.vstack((init_pos_arr, additional_pos_arr))
 
 num_of_particle = init_pos_arr.shape[0]
 
@@ -167,10 +112,8 @@ q0 = 3e-5
 dt = 1
 Γ = 2 * gamma * kB * T / mass
 ΔB = Γ * dt
-# maxstep = 75000
 # maxstep = 100000 * 2
-maxstep = 100000 * 10
-# maxstep = 100000
+maxstep = 100000
 
 if __name__ == "__main__":
     print(f"{I_0=}")
