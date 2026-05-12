@@ -1,7 +1,15 @@
+"""
+Plot and animate saved optical binding simulation data.
+
+This script loads saved NumPy arrays from the simulation output directory and
+provides plotting utilities for particle positions, velocities, forces, fields,
+dipole moments, and Green's function diagnostics. It can also generate 3D
+particle trajectory frames and compile them into an MP4 video.
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
-from numpy.linalg import det
-from constants import num_of_particle, maxstep, L
+from constants import num_of_particle, L
 from tqdm.auto import tqdm
 import os
 import glob
@@ -10,17 +18,19 @@ import imageio.v2 as imageio
 
 
 path = "./data/"
-# path = "./data/3_particles_stable/"
-# path = "./data/30_particles/"
-
 frame_time_step = 1000
 delete_frames = False
-
-data = np.load(path + "velocity_data.npy")
+data = np.load(path + "position_data.npy")
 length = data.shape[0] - 1
 
 
 def position_data_3D():
+    """
+    Display the particle positions at a single simulation time step in 3D.
+
+    This function loads the saved position data, extracts the particle positions
+    at the selected time step, and displays them as a 3D scatter plot.
+    """
     data = np.load(path + "position_data.npy")
 
     fig = plt.figure()
@@ -36,109 +46,14 @@ def position_data_3D():
     plt.show()
 
 
-# def grad_force_data():
-#     data = np.load(path + "grad_force_data.npy")
-#     plt.figure()
-#     plt.title("x Grad Force vs Time")
-#     plt.xlabel("Time Step")
-#     plt.ylabel("Force")
-#     plt.grid(True)
-#
-#     for i in range(num_of_particle):
-#         plt.plot(data[0:length, i, 0])
-#
-#     # plt.savefig(path + "x Position vs Time.png")
-#
-#     plt.figure()
-#     plt.title("y Grad Force vs Time")
-#     plt.xlabel("Time Step")
-#     plt.ylabel("Force")
-#     plt.grid(True)
-#
-#     for i in range(num_of_particle):
-#         plt.plot(data[0:length, i, 1])
-#
-#     plt.figure()
-#     plt.title("z Grad Force vs Time")
-#     plt.xlabel("Time Step")
-#     plt.ylabel("Force")
-#     plt.grid(True)
-#
-#     for i in range(num_of_particle):
-#         plt.plot(data[0:length, i, 2])
-#
-#     plt.show()
-#
-#
-# def rad_force_data():
-#     data = np.load(path + "rad_force_data.npy")
-#     plt.figure()
-#     plt.title("x Rad Force vs Time")
-#     plt.xlabel("Time Step")
-#     plt.ylabel("Force")
-#     plt.grid(True)
-#
-#     for i in range(num_of_particle):
-#         plt.plot(data[0:length, i, 0])
-#
-#     # plt.savefig(path + "x Position vs Time.png")
-#
-#     plt.figure()
-#     plt.title("y Rad Force vs Time")
-#     plt.xlabel("Time Step")
-#     plt.ylabel("Force")
-#     plt.grid(True)
-#
-#     for i in range(num_of_particle):
-#         plt.plot(data[0:length, i, 1])
-#
-#     plt.figure()
-#     plt.title("z Rad Force vs Time")
-#     plt.xlabel("Time Step")
-#     plt.ylabel("Force")
-#     plt.grid(True)
-#
-#     for i in range(num_of_particle):
-#         plt.plot(data[0:length, i, 2])
-#
-#     plt.show()
-#
-#
-# def spin_force_data():
-#     data = np.load(path + "spin_force_data.npy")
-#     plt.figure()
-#     plt.title("x Spin Force vs Time")
-#     plt.xlabel("Time Step")
-#     plt.ylabel("Force")
-#     plt.grid(True)
-#
-#     for i in range(num_of_particle):
-#         plt.plot(data[0:length, i, 0])
-#
-#     # plt.savefig(path + "x Position vs Time.png")
-#
-#     plt.figure()
-#     plt.title("y Spin Force vs Time")
-#     plt.xlabel("Time Step")
-#     plt.ylabel("Force")
-#     plt.grid(True)
-#
-#     for i in range(num_of_particle):
-#         plt.plot(data[0:length, i, 1])
-#
-#     plt.figure()
-#     plt.title("z Spin Force vs Time")
-#     plt.xlabel("Time Step")
-#     plt.ylabel("Force")
-#     plt.grid(True)
-#
-#     for i in range(num_of_particle):
-#         plt.plot(data[0:length, i, 2])
-#
-#     plt.show()
-
-
 def grad_force_data():
+    """
+    Plot the gradient force components over time for each particle.
+
+    This function loads the saved gradient force data and creates separate
+    time-series plots for the x, y, and z force components. The resulting figure
+    is saved to disk and displayed.
+    """
     data = np.load(path + "grad_force_data.npy")
     fig, axs = plt.subplots(3, 1, figsize=(8, 10))
 
@@ -172,6 +87,13 @@ def grad_force_data():
 
 
 def rad_force_data():
+    """
+    Plot the radiation pressure force components over time for each particle.
+
+    This function loads the saved radiation pressure force data and creates
+    separate time-series plots for the x, y, and z force components. The
+    resulting figure is saved to disk and displayed.
+    """
     data = np.load(path + "rad_force_data.npy")
     fig, axs = plt.subplots(3, 1, figsize=(8, 10))
 
@@ -205,6 +127,13 @@ def rad_force_data():
 
 
 def spin_force_data():
+    """
+    Plot the spin-force components over time for each particle.
+
+    This function loads the saved spin-force data and creates separate
+    time-series plots for the x, y, and z force components. The resulting figure
+    is saved to disk and displayed.
+    """
     data = np.load(path + "spin_force_data.npy")
     fig, axs = plt.subplots(3, 1, figsize=(8, 10))
 
@@ -238,6 +167,13 @@ def spin_force_data():
 
 
 def gen_frames():
+    """
+    Generate 3D animation frames from saved particle position data.
+
+    This function loads the saved position history, plots the particle positions
+    at selected time steps, rotates the 3D camera view over time, and saves each
+    rendered frame as an image file.
+    """
     data = np.load(path + "position_data.npy")
 
     time_steps = data.shape[0]
@@ -316,81 +252,14 @@ def gen_frames():
         plt.savefig(f"./plotting/videos/frames/3D/time_{t}.png", dpi=200)
 
 
-# def gen_frames():
-#     data = np.load(path + "position_data.npy")
-#     time_steps = data.shape[0]
-#
-#     fig = plt.figure()
-#     ax = fig.add_subplot(projection="3d")
-#
-#     s_near = 60
-#     s_far = 10
-#
-#     # fixed camera for XZ view
-#     # elev = 0
-#     # azim = 90  # or -90, depending on which side you want to view from
-#
-#     # fixed camera for XY view
-#     # elev = 90
-#     # azim = 0
-#
-#     elev = 0
-#     azim = 0
-#
-#     for frame_number, t in enumerate(
-#         tqdm(
-#             range(0, time_steps, frame_time_step), desc="Generating frames", unit="step"
-#         )
-#     ):
-#         ax.cla()
-#
-#         x = data[t, :, 0]
-#         y = data[t, :, 1]
-#         z = data[t, :, 2]
-#
-#         # keep camera fixed
-#         ax.view_init(elev=elev, azim=azim)  # type: ignore
-#
-#         # if you want depth-based marker sizes, match this to the same camera
-#         elev_rad = np.deg2rad(elev)
-#         azim_rad = np.deg2rad(azim)
-#
-#         view_dir = np.array(
-#             [
-#                 np.cos(elev_rad) * np.cos(azim_rad),
-#                 np.cos(elev_rad) * np.sin(azim_rad),
-#                 np.sin(elev_rad),
-#             ]
-#         )
-#
-#         pts = np.column_stack((x, y, z))
-#         depth = pts @ view_dir
-#
-#         depth_min = depth.min()
-#         depth_max = depth.max()
-#
-#         if depth_max > depth_min:
-#             depth_norm = (depth - depth_min) / (depth_max - depth_min)
-#         else:
-#             depth_norm = np.zeros_like(depth)
-#
-#         sizes = s_far + (1.0 - depth_norm) * (s_near - s_far)
-#
-#         ax.scatter(x, y, z, s=sizes, depthshade=True)
-#
-#         ax.set_xlim(-L / 2, L / 2)
-#         ax.set_ylim(-L / 2, L / 2)
-#         z_pad = 0.1 * L
-#         ax.set_zlim(np.min(z) - z_pad, np.max(z) + z_pad)  # type: ignore
-#
-#         ax.set_xlabel("X (nm)")
-#         ax.set_ylabel("Y (nm)")
-#         ax.set_zlabel("Z (nm)")  # type: ignore
-#
-#         plt.savefig(f"./plotting/videos/frames/3D/time_{t}.png", dpi=200)
-
-
 def gen_video():
+    """
+    Compile saved 3D animation frames into an MP4 video.
+
+    This function loads the generated frame images, sorts them by simulation time
+    step, writes them to a video file, and optionally deletes the intermediate
+    frame images after compilation.
+    """
     # images = glob.glob("./data/frames/2D/time_*.png")
     images = glob.glob("./plotting/videos/frames/3D/time_*.png")
     images.sort(key=lambda f: int(re.search(r"time_(\d+)", f).group(1)))  # type: ignore
@@ -412,6 +281,12 @@ def gen_video():
 
 
 def position_data():
+    """
+    Plot the x, y, and z particle positions over time.
+
+    This function loads the saved position data and creates separate time-series
+    plots for each position component for all particles.
+    """
     data = np.load(path + "position_data.npy")
     plt.figure()
     plt.title("x Position vs Time")
@@ -446,6 +321,12 @@ def position_data():
 
 
 def velocity_data():
+    """
+    Plot the x, y, and z particle velocities over time.
+
+    This function loads the saved velocity data and creates separate time-series
+    plots for each velocity component for all particles.
+    """
     data = np.load(path + "velocity_data.npy")
     plt.figure()
     plt.title("x Velocity vs Time")
@@ -480,6 +361,12 @@ def velocity_data():
 
 
 def force_data():
+    """
+    Plot the total force components over time for each particle.
+
+    This function loads the saved total force data and creates separate
+    time-series plots for the x, y, and z force components.
+    """
     data = np.load(path + "forces_data.npy")
     plt.figure()
     plt.title("x Force vs Time")
@@ -512,6 +399,12 @@ def force_data():
 
 
 def E_field_data():
+    """
+    Plot the electric field components over time at each particle position.
+
+    This function loads the saved electric field data and creates separate
+    time-series plots for the x, y, and z electric field components.
+    """
     data = np.load(path + "E_n_data.npy")
     plt.figure()
     plt.title("x E_field_strength vs Time")
@@ -544,6 +437,12 @@ def E_field_data():
 
 
 def dipole_moment_data():
+    """
+    Plot the induced dipole moment components over time for each particle.
+
+    This function loads the saved dipole moment data and creates separate
+    time-series plots for the x, y, and z dipole moment components.
+    """
     data = np.load(path + "p_i_data.npy")
     plt.figure()
     plt.title("x Dipole Moment vs Time")
@@ -576,6 +475,12 @@ def dipole_moment_data():
 
 
 def G_max_det():
+    """
+    Plot Green's function matrix diagnostics over time.
+
+    This function loads the saved determinant and maximum-value data for the
+    flattened Green's function matrix and displays them as time-series plots.
+    """
     det_data = np.load(path + "G_det.npy")
     max_data = np.load(path + "G_max.npy")
 
@@ -594,25 +499,14 @@ def G_max_det():
 
 if __name__ == "__main__":
     # position_data_3D()
-    gen_frames()
-    gen_video()
-    # position_data()
+    # gen_frames()
+    # gen_video()
+    position_data()
     # velocity_data()
     # grad_force_data()
     # rad_force_data()
     # spin_force_data()
-
     # force_data()
     # E_field_data()
     # dipole_moment_data()
     # G_max_det()
-
-    # position_data = np.load(path + "position_data.npy")
-    # print(position_data.shape)
-    #
-    # x_data = position_data[15000, 0, 0]
-    #
-    # for n in range(num_of_particle):
-    #     for i in range(num_of_particle):
-    #         print(position_data[15000, n, i])
-    #     print("\n")

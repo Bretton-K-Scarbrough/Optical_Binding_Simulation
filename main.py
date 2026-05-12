@@ -1,3 +1,13 @@
+"""
+Run the main optical binding simulation.
+
+This script initializes the particle positions, solves for the induced dipole
+moments using the coupled dyadic Green's function system, computes the optical
+and Coulomb-like forces acting on each particle, and numerically evolves the
+particle positions through time. The resulting position history is saved to
+disk for later analysis and visualization.
+"""
+
 import numpy as np
 from tqdm.auto import trange
 from constants import (
@@ -9,6 +19,7 @@ from constants import (
     dt,
     maxstep,
     ΔB,
+    two_dimension_restriction,
 )
 from functions import (
     create_G_mnij,
@@ -48,6 +59,7 @@ if __name__ == "__main__":
 
     F_grad = gen_F_grad(pos_arr, p_i)  # type: ignore
 
+    ## NOTE: Create arrays to hold data
     velocity_arr = np.zeros((maxstep + 1, num_of_particle, 3))
     full_pos_arr = np.zeros((maxstep + 1, num_of_particle, 3))
     forces_arr = np.zeros((maxstep + 1, num_of_particle, 3))
@@ -67,7 +79,6 @@ if __name__ == "__main__":
 
     ## NOTE: Main loop
     for step in trange(1, maxstep + 1, desc="Simulating"):
-        # Einc_mi = gen_Einc_Gaussian_mi(full_pos_arr[step - 1])
         Einc_mi = gen_Einc_mi(full_pos_arr[step - 1])
         E_flattened = E_flattened = Einc_mi.reshape(3 * num_of_particle)
         G_nmij = create_G_mnij(full_pos_arr[step - 1], polarizabilities)
@@ -97,10 +108,7 @@ if __name__ == "__main__":
         spin_force = spin_Force(full_pos_arr[step - 1], p_i)
         spin_forces_arr[step - 1] = spin_force
 
-        forces_arr[step - 1] = grad_force + coulomb_force(full_pos_arr[step - 1]) + (0.005 * rad_force) + spin_force  # type: ignore
-
-        # forces_arr[step - 1] = coulomb_force(full_pos_arr[step - 1]) + radiation_Pressure(full_pos_arr[step - 1], p_i) + spin_Force(full_pos_arr[step - 1], p_i)  # type: ignore
-        # forces_arr[step - 1] = gen_F_grad(full_pos_arr[step - 1], p_i) + coulomb_force(full_pos_arr[step - 1]) + spin_Force(full_pos_arr[step - 1], p_i)  # type: ignore
+        forces_arr[step - 1] = grad_force + coulomb_force(full_pos_arr[step - 1]) + (0.005 * rad_force) + spin_force  # type: ignore # Rad force dominates (likely due to insane indicent power), reduced rad_force a lot for 3D simulation.
 
         full_pos_arr[step] = full_pos_arr[step - 1] + velocity_arr[step - 1] * dt
 
@@ -111,29 +119,27 @@ if __name__ == "__main__":
 
         velocity_arr[step] = (
             velocity_arr[step - 1] * np.exp(-gamma * dt)
-            # + (0.001 * randomDeltaV)
+            # + (0.001 * randomDeltaV) # Brownian motion term
             + forces_arr[step - 1] * (dt / mass)
         )
 
+        ## NOTE: If you want to pin particles in place below stops them from moving
         # velocity_arr[step, 0:9] = np.asarray(
         #     [0, 0, 0]
         # )  # set velocity to zero on the first particle
 
-        for i in range(num_of_particle):
-            forces_arr[step, i, 2] = 0
-            velocity_arr[step, i, 2] = 0
-            full_pos_arr[step, i, 2] = 0
+        ## NOTE: Restricts to 2D or 3D
+        if two_dimension_restriction:
+            for i in range(num_of_particle):
+                forces_arr[step, i, 2] = 0
+                velocity_arr[step, i, 2] = 0
+                full_pos_arr[step, i, 2] = 0
 
     ## NOTE: SAVE DATA
-    # np.save("./data/p_i_data.npy", np.asarray(p_i_arr))
-    # np.save("./data/E_n_data.npy", np.asarray(E_n_arr))
     np.save("./data/position_data.npy", np.asarray(full_pos_arr))
     # np.save("./data/velocity_data.npy", np.asarray(velocity_arr))
     # np.save("./data/forces_data.npy", np.asarray(forces_arr))
     # np.save("./data/grad_force_data.npy", np.asarray(grad_forces_arr))
     # np.save("./data/rad_force_data.npy", np.asarray(rad_forces_arr))
     # np.save("./data/spin_force_data.npy", np.asarray(spin_forces_arr))
-    # np.save("./data/eigenvalues_data.npy", np.asarray(eigenvalue_arr))
-    # np.save("./data/G_det.npy", np.asarray(det_G_arr))
-    # np.save("./data/G_max.npy", np.asarray(max_G_arr))
     print("saved data")

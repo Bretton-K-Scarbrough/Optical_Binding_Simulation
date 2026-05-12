@@ -1,7 +1,18 @@
+"""
+Define constants and initial conditions for the optical binding simulation.
+
+This file sets the simulation unit system, fundamental constants, colloid and
+laser parameters, particle polarizability, initial particle positions, and
+time-stepping values used throughout the simulation. It also computes derived
+quantities such as the electric field amplitude, scattering cross section,
+particle mass, damping rate, and Brownian motion scale.
+"""
+
 import numpy as np
 
 use_circular_polarization = False
-pol_angle = 45
+pol_angle = 45  # Given in degrees
+two_dimension_restriction = False
 
 # Units
 microsecond = 1.0
@@ -9,7 +20,6 @@ microgram = 1.0
 nanometer = 1.0
 femtocoulomb = 1.0
 kelvin = 1.0
-
 second = microsecond * 1e6
 kg = microgram * 1e9
 meter = nanometer * 1e9

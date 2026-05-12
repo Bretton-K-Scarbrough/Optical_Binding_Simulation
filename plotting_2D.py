@@ -1,4 +1,13 @@
-import numpy as cp
+"""
+Generate a 2D animation of the optical binding simulation.
+
+This script loads saved particle position data, renders each frame as a scatter
+plot over a Gaussian beam intensity background, and compiles the frames into an
+MP4 video. It can also optionally delete the intermediate image frames after
+the video is created.
+"""
+
+import numpy as np
 import imageio.v2 as imageio
 import os
 import glob
@@ -13,13 +22,13 @@ delete_frames = False
 
 # Creates meshgrid for Gaussian beam background image
 N = 256
-x = cp.linspace(-L / 2, L / 2, N)
-X, Y = cp.meshgrid(x, x)
+x = np.linspace(-L / 2, L / 2, N)
+X, Y = np.meshgrid(x, x)
 
 
 def gen_frames_gaussian():
-    gaussian = E0 * cp.exp(1j * k * 0) * cp.exp(-(X**2 + Y**2) / w0**2)
-    intensity = cp.abs(gaussian) ** 2
+    gaussian = E0 * np.exp(1j * k * 0) * np.exp(-(X**2 + Y**2) / w0**2)
+    intensity = np.abs(gaussian) ** 2
     data = np.load("./data/position_data.npy")
 
     time_steps = data.shape[0]

@@ -1,3 +1,15 @@
+"""
+Plot the incident optical power flow on the y=0 plane.
+
+This script creates an x-z observation grid, evaluates the incident electric
+and magnetic fields at each point, computes the time-averaged Poynting vector
+
+    S = 0.5 * Re(E x H*)
+
+and displays the z-component, S_z, as a 2D image. This is useful for checking
+the propagation direction and spatial structure of the incident Gaussian beam.
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from functions import gen_Hinc, gen_Einc_mi_gaussian_linear_polarization
