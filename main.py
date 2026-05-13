@@ -52,11 +52,6 @@ if __name__ == "__main__":
     p_i = ((inv @ E_flattened) / alpha).reshape(num_of_particle, 3)
 
     # NOTE: Calculate scattering dyadic Green's function and find Escatterd
-    G_mnij_scatter = create_G_mnij_scatter(pos_arr)
-
-    Escattered_ni = np.einsum("nmij,mj->ni", G_mnij_scatter, p_i)
-    E_tot = Escattered_ni + Einc_mi
-
     F_grad = gen_F_grad(pos_arr, p_i)  # type: ignore
 
     ## NOTE: Create arrays to hold data
@@ -66,12 +61,7 @@ if __name__ == "__main__":
     rad_forces_arr = np.zeros((maxstep + 1, num_of_particle, 3))
     spin_forces_arr = np.zeros((maxstep + 1, num_of_particle, 3))
     grad_forces_arr = np.zeros((maxstep + 1, num_of_particle, 3))
-    p_i_arr = np.zeros((maxstep + 1, num_of_particle, 3))
-    E_n_arr = np.zeros((maxstep + 1, num_of_particle, 3))
-    det_G_arr = np.zeros((maxstep + 1))
-    max_G_arr = np.zeros((maxstep + 1))
-
-    eigenvalue_arr = []
+    # p_i_arr = np.zeros((maxstep + 1, num_of_particle, 3))
 
     ## NOTE: initialize
     full_pos_arr[0] = init_pos_arr
@@ -87,17 +77,15 @@ if __name__ == "__main__":
             3 * num_of_particle, 3 * num_of_particle
         )
 
-        det_G_arr[step - 1] = np.linalg.det(G_flattened)
-        max_G_arr[step - 1] = np.max(G_flattened)
-
         inv = np.linalg.inv(alpha * G_flattened)
         p_i = ((inv @ E_flattened) / alpha).reshape(num_of_particle, 3)
 
-        p_i_arr[step - 1] = p_i
+        ## NOTE: If you want to save this data you can but its only really for bug fixing
+        # p_i_arr[step - 1] = p_i
 
-        G_mnij_scatter = create_G_mnij_scatter(full_pos_arr[step - 1])
-        Escattered_ni = np.einsum("nmij,mj->ni", G_mnij_scatter, p_i_arr[step - 1])
-        E_n_arr[step - 1] = Einc_mi + Escattered_ni
+        # G_mnij_scatter = create_G_mnij_scatter(full_pos_arr[step - 1])
+        # Escattered_ni = np.einsum("nmij,mj->ni", G_mnij_scatter, p_i_arr[step - 1])
+        # E_n_arr[step - 1] = Einc_mi + Escattered_ni
 
         grad_force = gen_F_grad(full_pos_arr[step - 1], p_i)
         grad_forces_arr[step - 1] = grad_force
@@ -123,10 +111,10 @@ if __name__ == "__main__":
             + forces_arr[step - 1] * (dt / mass)
         )
 
-        ## NOTE: If you want to pin particles in place below stops them from moving
-        # velocity_arr[step, 0:9] = np.asarray(
+        ## WARNING: If you want to pin particles in place below stops them from moving
+        # velocity_arr[step, 0:2] = np.asarray(
         #     [0, 0, 0]
-        # )  # set velocity to zero on the first particle
+        # )  # set velocity to zero on the first two particles
 
         ## NOTE: Restricts to 2D or 3D
         if two_dimension_restriction:

@@ -10,9 +10,10 @@ particle mass, damping rate, and Brownian motion scale.
 
 import numpy as np
 
+use_gaussian_beam = True
 use_circular_polarization = False
 pol_angle = 45  # Given in degrees
-two_dimension_restriction = False
+two_dimension_restriction = True
 
 # Units
 microsecond = 1.0
@@ -58,8 +59,6 @@ I_0 = (
 )  # I_0 = power / area  # Salandrino's original value, physically absurd
 
 # Polarizability
-# epsilon_p = -3 * (1.33**2)
-# epsilon_p = -3
 epsilon_p = 2.1 * (1.33) ** 2
 mu_p = 1.0
 epsilon_b = 1
@@ -91,9 +90,10 @@ r = lam / 2  # Particle distance arbitrarily chosen
 init_pos_arr = np.asarray(
     [
         [0, r, 0],
-        [r, 0, 0],
-        [-r, 0, 0],
-        [0, -r, 0],
+        # [r, 0, 0],
+        # [-r, 0, 0],
+        # [0, -r, 0],
+        # [0, -3 * r, 0],
     ]
 )
 
@@ -102,13 +102,13 @@ init_pos_arr = np.asarray(
 # )[-1] # Grabs the final position from a saved data set.
 
 np.random.seed(2002)
-# additional_pos_arr = np.random.uniform(low=-L / 2, high=L / 2, size=(20, 3))
-additional_pos_arr = np.asarray(
-    [
-        [-8 * r, 6 * r, 0],
-        [-8 * r, 5 * r, 0],
-    ]
-)
+additional_pos_arr = np.random.uniform(low=-L / 2, high=L / 2, size=(10, 3))
+# additional_pos_arr = np.asarray(
+#     [
+#         [-8 * r, 6 * r, 0],
+#         [-8 * r, 5 * r, 0],
+#     ]
+# )
 init_pos_arr = np.vstack((init_pos_arr, additional_pos_arr))
 
 num_of_particle = init_pos_arr.shape[0]
